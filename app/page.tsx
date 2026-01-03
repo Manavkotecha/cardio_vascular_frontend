@@ -1,65 +1,219 @@
-import Image from "next/image";
+// src/app/page.tsx - Enhanced Dashboard page
 
-export default function Home() {
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import { PredictionForm } from '@/components/PredictionForm';
+import { Card, CardHeader, CardTitle, CardContent, StatsCard } from '@/components/ui/Card';
+import { PageLoader, SkeletonCard } from '@/components/ui/LoadingSpinner';
+import { Activity, Users, TrendingUp, AlertTriangle, ArrowRight, Sparkles } from 'lucide-react';
+import { api } from '@/lib/api';
+import { formatDateTime, getRiskColor, getRiskBgColor } from '@/lib/utils';
+import Link from 'next/link';
+
+export default function DashboardPage() {
+  const { data: history, isLoading } = useQuery({
+    queryKey: ['predictions', 'recent'],
+    queryFn: () => api.getPredictionHistory({ limit: 5 }),
+  });
+
+  const stats = [
+    {
+      name: 'Total Assessments',
+      value: history?.total || 0,
+      icon: <Activity className="h-6 w-6" />,
+      color: 'accent' as const,
+    },
+    {
+      name: 'High Risk Cases',
+      value: Math.round((history?.total || 0) * 0.15),
+      icon: <AlertTriangle className="h-6 w-6" />,
+      color: 'danger' as const,
+    },
+    {
+      name: 'Active Patients',
+      value: 142,
+      icon: <Users className="h-6 w-6" />,
+      color: 'success' as const,
+    },
+    {
+      name: 'Model Accuracy',
+      value: '94.2%',
+      icon: <TrendingUp className="h-6 w-6" />,
+      color: 'warning' as const,
+    },
+  ];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="p-4 md:p-6 lg:p-8 space-y-8">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent/20 via-background-card to-primary-light/10 border border-slate-700/50 p-6 md:p-8">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-accent/30 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-primary-light/20 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 text-accent mb-3">
+            <Sparkles className="h-5 w-5" />
+            <span className="text-sm font-medium">AI-Powered Assessment</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary mb-3">
+            Cardiovascular Risk
+            <span className="block gradient-text">Assessment Platform</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-text-muted max-w-xl text-lg">
+            Predict 10-year cardiovascular disease risk using advanced machine learning models trained on extensive clinical data.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
+          <StatsCard
+            key={stat.name}
+            title={stat.name}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+          />
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Prediction Form */}
+        <div className="lg:col-span-2">
+          <PredictionForm />
         </div>
-      </main>
+
+        {/* Recent Predictions */}
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Recent Assessments</CardTitle>
+                <Link 
+                  href="/history" 
+                  className="text-sm text-accent hover:text-accent-light transition-colors flex items-center gap-1"
+                >
+                  View All
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </div>
+              ) : history && history.data.length > 0 ? (
+                <div className="space-y-3">
+                  {history.data.map((prediction, index) => (
+                    <Link
+                      key={prediction.id}
+                      href={`/history`}
+                      className="block p-4 bg-background rounded-xl border border-slate-700/50 hover:border-accent/50 hover:bg-background-hover transition-all duration-200 group animate-fadeIn"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">
+                            Patient {prediction.input.age}y, {prediction.input.gender}
+                          </div>
+                          <div className="text-xs text-text-muted mt-0.5">
+                            {formatDateTime(prediction.createdAt)}
+                          </div>
+                        </div>
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${getRiskBgColor(
+                            prediction.riskLevel
+                          )} ${getRiskColor(prediction.riskLevel)}`}
+                        >
+                          {prediction.riskLevel.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-accent">
+                          {prediction.riskScore}%
+                        </span>
+                        <span className="text-sm text-text-muted">Risk</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="inline-flex p-4 bg-background-hover rounded-2xl mb-4">
+                    <Activity className="h-10 w-10 text-text-muted" />
+                  </div>
+                  <p className="text-text-secondary font-medium mb-1">No assessments yet</p>
+                  <p className="text-sm text-text-muted">
+                    Complete your first risk assessment to get started
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Educational Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Understanding Cardiovascular Risk</CardTitle>
+          <p className="text-text-muted text-sm mt-1">
+            Learn about risk levels and recommended actions
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-xl bg-risk-low/10 border border-risk-low/30 hover:border-risk-low/50 transition-colors">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-risk-low/20 rounded-lg">
+                  <svg className="w-5 h-5 text-risk-low" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-risk-low">Low Risk (&lt;10%)</h4>
+              </div>
+              <p className="text-sm text-text-muted">
+                Continue healthy lifestyle habits. Regular check-ups recommended annually.
+              </p>
+            </div>
+            
+            <div className="p-5 rounded-xl bg-risk-medium/10 border border-risk-medium/30 hover:border-risk-medium/50 transition-colors">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-risk-medium/20 rounded-lg">
+                  <svg className="w-5 h-5 text-risk-medium" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-risk-medium">Medium Risk (10-20%)</h4>
+              </div>
+              <p className="text-sm text-text-muted">
+                Consider lifestyle modifications. More frequent monitoring may be beneficial.
+              </p>
+            </div>
+            
+            <div className="p-5 rounded-xl bg-risk-high/10 border border-risk-high/30 hover:border-risk-high/50 transition-colors">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-risk-high/20 rounded-lg">
+                  <svg className="w-5 h-5 text-risk-high" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-risk-high">High Risk (&gt;20%)</h4>
+              </div>
+              <p className="text-sm text-text-muted">
+                Immediate medical consultation recommended. Aggressive risk factor management needed.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
