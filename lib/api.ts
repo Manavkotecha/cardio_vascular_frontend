@@ -216,43 +216,78 @@ class ApiClient {
   // ============================================
 
   async createPrediction(input: PredictionInput): Promise<PredictionResult> {
-    try {
-      // Transform data to backend format
-      const backendInput = transformToBackendFormat(input);
-      console.log('[API] Sending to backend:', backendInput);
+    // Transform data to backend format
+    const backendInput = transformToBackendFormat(input);
+    console.log('[API] Sending to backend:', backendInput);
 
-      // Use Next.js rewrite proxy to bypass CORS
-      // The rewrite in next.config.ts proxies /api/backend/* to Render
-      const response = await fetch('/api/backend/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(backendInput),
-      });
+    // Retry configuration for Render cold starts (can take up to 5-6 minutes)
+    const maxRetries = 8;
+    const baseDelay = 15000; // Start with 15 seconds
+    let lastError: Error | null = null;
 
-      console.log('[API] Response status:', response.status);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[API] Attempt ${attempt}/${maxRetries}...`);
 
-      if (!response.ok) {
+        // Use Next.js rewrite proxy to bypass CORS
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout per request
+
+        const response = await fetch('/api/backend/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(backendInput),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        console.log('[API] Response status:', response.status);
+
+        if (response.ok) {
+          const backendResponse = await response.json();
+          console.log('[API] Backend response:', backendResponse);
+
+          // Transform response to frontend format
+          const result = transformBackendResponse(backendResponse, input);
+
+          // Save to IndexedDB
+          await savePrediction(result);
+
+          return result;
+        }
+
+        // Check if it's a cold start error (500/502/503/504)
+        if ([500, 502, 503, 504].includes(response.status) && attempt < maxRetries) {
+          const waitTime = baseDelay * attempt; // Increase wait time each attempt
+          console.log(`[API] Server waking up... Retry in ${waitTime / 1000}s (attempt ${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+
         const errorText = await response.text();
         console.error('[API] Backend error:', response.status, errorText);
         throw new Error(`Backend error: ${errorText || response.status}`);
+
+      } catch (error: any) {
+        lastError = error;
+
+        // If it's a network/timeout error and we have retries left, wait and retry
+        if (attempt < maxRetries && (error.name === 'AbortError' || error.message?.includes('fetch'))) {
+          const waitTime = baseDelay * attempt;
+          console.log(`[API] Connection timeout... Retry in ${waitTime / 1000}s (attempt ${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+
+        console.error('[API] Prediction error:', error);
+        throw error;
       }
-
-      const backendResponse = await response.json();
-      console.log('[API] Backend response:', backendResponse);
-
-      // Transform response to frontend format
-      const result = transformBackendResponse(backendResponse, input);
-
-      // Save to IndexedDB
-      await savePrediction(result);
-
-      return result;
-    } catch (error) {
-      console.error('[API] Prediction error:', error);
-      throw error;
     }
+
+    // If all retries failed
+    throw lastError || new Error('Failed to connect to backend after multiple attempts');
   }
 
   async getPredictionHistory(filters?: HistoryFilters): Promise<PaginatedResponse<PredictionResult>> {

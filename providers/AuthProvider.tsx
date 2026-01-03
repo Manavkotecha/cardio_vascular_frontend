@@ -1,12 +1,10 @@
-// src/providers/AuthProvider.tsx - Authentication context provider
+// src/providers/AuthProvider.tsx - Layout provider (auth removed)
 
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { createContext, useContext } from 'react';
+import { usePathname } from 'next/navigation';
 import { User } from '../types';
-import { api } from '../lib/api';
-import { PageLoader } from '../components/ui/LoadingSpinner';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 
@@ -20,79 +18,36 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Default user for demo mode
+const defaultUser: User = {
+  id: 'user-1',
+  email: 'doctor@hospital.com',
+  name: 'Dr. Demo User',
+  role: 'doctor',
+  createdAt: new Date().toISOString(),
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
 
-  const isLoginPage = pathname === '/login';
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // Handle redirect in useEffect to avoid setState during render
-  useEffect(() => {
-    if (!isLoading && !user && !isLoginPage) {
-      router.push('/login');
-    }
-  }, [isLoading, user, isLoginPage, router]);
-
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const currentUser = await api.getCurrentUser();
-        setUser(currentUser);
-      }
-    } catch (error) {
-      localStorage.removeItem('token');
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Mock auth functions (no-op since auth is disabled)
   const login = async (email: string, password: string) => {
-    const result = await api.login(email, password);
-    localStorage.setItem('token', result.token);
-    setUser(result.user);
-    router.push('/');
+    // No-op
   };
 
   const logout = async () => {
-    try {
-      await api.logout();
-    } catch (error) {
-      // Ignore logout errors
-    } finally {
-      localStorage.removeItem('token');
-      setUser(null);
-      router.push('/login');
-    }
+    // No-op
   };
 
   const value = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
+    user: defaultUser,
+    isLoading: false,
+    isAuthenticated: true,
     login,
     logout,
   };
 
-  // Show loader while checking auth or redirecting
-  if (isLoading || (!user && !isLoginPage)) {
-    return <PageLoader />;
-  }
-
-  // Show login page without layout
-  if (isLoginPage) {
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-  }
-
-  // Show main app with layout
+  // Always show main app with layout (no login required)
   return (
     <AuthContext.Provider value={value}>
       <div className="flex h-screen overflow-hidden bg-background">
@@ -118,3 +73,4 @@ export function useAuthContext() {
   }
   return context;
 }
+

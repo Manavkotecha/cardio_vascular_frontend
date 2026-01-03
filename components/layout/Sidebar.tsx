@@ -20,7 +20,6 @@ const navigation = [
   { name: 'History', href: '/history', icon: History, description: 'Past assessments' },
   { name: 'ML Insights', href: '/insights', icon: TrendingUp, description: 'Model performance' },
   { name: 'Data Explorer', href: '/data', icon: Database, description: 'Dataset analysis' },
-  { name: 'Settings', href: '/settings', icon: Settings, description: 'Configuration' },
 ];
 
 export function Sidebar() {
