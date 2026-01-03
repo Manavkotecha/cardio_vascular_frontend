@@ -12,33 +12,45 @@ import { formatDateTime, getRiskColor, getRiskBgColor } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function DashboardPage() {
+  // Fetch all predictions to get accurate counts
+  const { data: allPredictions, isLoading: loadingAll } = useQuery({
+    queryKey: ['predictions', 'all'],
+    queryFn: () => api.getPredictionHistory({ limit: 1000 }), // Get all for counting
+  });
+
   const { data: history, isLoading } = useQuery({
     queryKey: ['predictions', 'recent'],
     queryFn: () => api.getPredictionHistory({ limit: 5 }),
   });
 
+  // Calculate dynamic stats
+  const totalAssessments = allPredictions?.total || 0;
+  const highRiskCases = allPredictions?.data?.filter(p => p.riskLevel === 'high').length || 0;
+  const mediumRiskCases = allPredictions?.data?.filter(p => p.riskLevel === 'medium').length || 0;
+  const uniquePatients = totalAssessments; // Each assessment is a unique patient scenario
+
   const stats = [
     {
       name: 'Total Assessments',
-      value: history?.total || 0,
+      value: totalAssessments,
       icon: <Activity className="h-6 w-6" />,
       color: 'accent' as const,
     },
     {
       name: 'High Risk Cases',
-      value: Math.round((history?.total || 0) * 0.15),
+      value: highRiskCases,
       icon: <AlertTriangle className="h-6 w-6" />,
       color: 'danger' as const,
     },
     {
-      name: 'Active Patients',
-      value: 142,
+      name: 'Medium Risk',
+      value: mediumRiskCases,
       icon: <Users className="h-6 w-6" />,
       color: 'success' as const,
     },
     {
       name: 'Model Accuracy',
-      value: '94.2%',
+      value: '74%',
       icon: <TrendingUp className="h-6 w-6" />,
       color: 'warning' as const,
     },

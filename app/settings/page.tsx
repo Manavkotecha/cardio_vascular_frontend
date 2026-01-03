@@ -92,50 +92,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Preferences */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-risk-medium/20 rounded-lg">
-              <Bell className="h-5 w-5 text-risk-medium" />
-            </div>
-            <div>
-              <CardTitle>Preferences</CardTitle>
-              <p className="text-sm text-text-muted mt-0.5">Customize your experience</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <Moon className="h-5 w-5 text-text-muted" />
-                <div>
-                  <p className="text-sm font-medium text-text-primary">Dark Mode</p>
-                  <p className="text-xs text-text-muted">Always enabled for optimal viewing</p>
-                </div>
-              </div>
-              <div className="px-3 py-1 bg-risk-low/20 text-risk-low text-xs font-medium rounded-full">
-                Active
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-text-muted" />
-                <div>
-                  <p className="text-sm font-medium text-text-primary">Notifications</p>
-                  <p className="text-xs text-text-muted">Receive alerts for high-risk predictions</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-11 h-6 bg-background-hover rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
-              </label>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Account Actions */}
       <Card className="border-risk-high/30">
