@@ -89,7 +89,7 @@ export function Sidebar() {
               </span>
             </div>
             <p className="text-sm font-semibold text-text-primary">v2.1.0</p>
-            <p className="text-xs text-text-muted mt-1">73.3% Accuracy</p>
+            <p className="text-xs text-text-muted mt-1">74% Accuracy</p>
           </div>
         </div>
       </div>

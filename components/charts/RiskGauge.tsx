@@ -69,7 +69,7 @@ export function RiskGauge({ score, level }: RiskGaugeProps) {
       <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 rounded-full bg-text-primary" />
 
       {/* Score Display */}
-      <div className="absolute left-1/2 bottom-2 -translate-x-1/2 text-center">
+      <div className="absolute left-1/2 bottom-8 -translate-x-1/2 text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
